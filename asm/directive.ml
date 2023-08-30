@@ -1,4 +1,14 @@
-type register = Rax | R8 | R9 | R10 | R11 | Rsp | Rdi | Rsi | Rdx | Rbp
+open Core
+
+(* Type definitions have been moved to the directive.mli file.
+   Refer to the interface file for definitions. *)
+type register = [%import: Directive.register]
+
+type operand = [%import: Directive.operand]
+
+type directive = [%import: Directive.directive]
+
+type asm_program = [%import: Directive.asm_program]
 
 let string_of_register ?(byte = false) (reg : register) =
   match (reg, byte) with
@@ -22,28 +32,16 @@ let string_of_register ?(byte = false) (reg : register) =
       "r11"
   | R11, true ->
       "r11b"
-  | Rsp, false ->
+  | Rsp, _ ->
       "rsp"
-  | Rsp, true ->
-      "rsp"
-  | Rdi, false ->
+  | Rdi, _ ->
       "rdi"
-  | Rdi, true ->
-      "rdi"
-  | Rsi, false ->
+  | Rsi, _ ->
       "rsi"
-  | Rsi, true ->
-      "rsi"
-  | Rdx, false ->
+  | Rdx, _ ->
       "rdx"
-  | Rdx, true ->
-      "rdx"
-  | Rbp, false ->
+  | Rbp, _ ->
       "rbp"
-  | Rbp, true ->
-      "rbp"
-
-type operand = Reg of register | Imm of int | MemOffset of (operand * operand)
 
 let is_register o = match o with Reg _ -> true | _ -> false
 
@@ -61,45 +59,6 @@ let rec string_of_operand ?(byte = false) = function
         Printf.sprintf "QWORD [%s + %s]"
           (string_of_operand ~byte:false o1)
           (string_of_operand ~byte:false o2)
-
-type directive =
-  | Global of string
-  | Extern of string
-  | Section of string
-  | Label of string
-  | DqLabel of string
-  | DqString of string
-  | DqInt of int
-  | Align of int
-  | LeaLabel of (operand * string)
-  | Mov of (operand * operand)
-  | MovByte of (operand * operand)
-  | Add of (operand * operand)
-  | Sub of (operand * operand)
-  | Div of operand
-  | Mul of operand
-  | Cqo
-  | Shl of (operand * operand)
-  | Shr of (operand * operand)
-  | Sar of (operand * operand)
-  | Cmp of (operand * operand)
-  | And of (operand * operand)
-  | Or of (operand * operand)
-  | Setz of operand
-  | Setl of operand
-  | Jmp of string
-  | Je of string
-  | Jne of string
-  | Jl of string
-  | Jnl of string
-  | Jg of string
-  | Jng of string
-  | ComputedJmp of operand
-  | Ret
-  | Push of operand
-  | Pop of operand
-  | Call of string
-  | Comment of string
 
 let label_name (macos : bool) (label : string) : string =
   Printf.sprintf (if macos then "_%s" else "%s") label

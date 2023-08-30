@@ -1,9 +1,7 @@
 {
   open Parse
-
   exception Error of string
 }
-
 
 rule token = parse
 | [' ' '\t' '\n'] (* also ignore newlines, not only whitespace and tabs *)

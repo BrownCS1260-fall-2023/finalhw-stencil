@@ -1,29 +1,37 @@
-type s_exp = Exp.t =
-  | Num of int
-  | Sym of string
-  | Chr of char
-  | Str of string
-  | Lst of s_exp list
-  | Dots
+open Core
+
+type s_exp = [%import: Exp.t]
 
 let show = Exp.show
 
-let parse = Parser.parse
+let parse (s : string) =
+  let buf = Lexing.from_string s in
+  Parse.main Lex.token buf
 
-let parse_many = Parser.parse_many
+let parse_many (s : string) =
+  let buf = Lexing.from_string s in
+  Parse.many Lex.token buf
 
-let parse_file = Parser.parse_file
+let parse_file file =
+  let inx = In_channel.create file in
+  let lexbuf = Lexing.from_channel inx in
+  let ast = Parse.main Lex.token lexbuf in
+  In_channel.close inx ; ast
 
-let parse_file_many = Parser.parse_file_many
+let parse_file_many file =
+  let inx = In_channel.create file in
+  let lexbuf = Lexing.from_channel inx in
+  let ast = Parse.many Lex.token lexbuf in
+  In_channel.close inx ; ast
 
-let rec string_of_s_exp : s_exp -> string = function
+let rec (string_of_s_exp : s_exp -> string) = function
   | Sym x ->
       x
   | Num n ->
       string_of_int n
   | Lst exps ->
-      let exps = exps |> List.map string_of_s_exp in
-      "(" ^ String.concat " " exps ^ ")"
+      let exps = exps |> List.map ~f:string_of_s_exp in
+      "(" ^ String.concat ~sep:" " exps ^ ")"
   | Chr c -> (
       "#\\"
       ^ match c with '\n' -> "newline" | ' ' -> "space" | _ -> String.make 1 c )

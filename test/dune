@@ -1,17 +1,45 @@
-(executable
+(library
  (name difftest)
  (modules difftest)
- (libraries yojson csci1260 lisp_syntax))
+ (preprocess
+  (staged_pps ppx_import))
+ (libraries
+  yojson
+  csci1260
+  core
+  core_unix
+  core_unix.sys_unix
+  printbox
+  printbox-text))
+
+(executable
+ (name difftest_exec)
+ (public_name difftest_exec)
+ (modules difftest_exec)
+ (libraries
+  difftest
+  yojson
+  csci1260
+  core
+  core_unix
+  core_unix.sys_unix
+  printbox
+  printbox-text))
 
 (rule
  (alias runtest)
  (deps
-  difftest.exe
-  (glob_files ../data/*)
+  difftest_exec.exe
+  ../bin/interp.exe
+  ../bin/compile.exe
+  (glob_files_rec ../data/*)
   (glob_files ../examples/examples.csv)
-  (glob_files ../examples/*.lisp)
-  (glob_files ../examples/*.out)
-  (glob_files ../examples/*.err)
-  (glob_files ../examples/*.in))
+  (glob_files_rec ../examples/**.lisp)
+  (glob_files_rec ../examples/**.mlb)
+  (glob_files_rec ../examples/**.out)
+  (glob_files_rec ../examples/**.err)
+  (glob_files_rec ../examples/**.in))
  (action
-  (run ./difftest.exe)))
+  (chdir
+   "%{project_root}"
+   (run difftest_exec))))

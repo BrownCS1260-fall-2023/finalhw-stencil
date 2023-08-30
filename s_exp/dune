@@ -7,4 +7,5 @@
 (library
  (name s_exp)
  (preprocess
-  (pps ppx_deriving.show)))
+  (staged_pps ppx_import ppx_deriving.show))
+ (libraries core))

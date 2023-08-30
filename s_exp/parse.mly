@@ -15,29 +15,29 @@
 %%
 
 main:
-| e = expr EOF
-        { e }
+| e=expr EOF
+  { e }
 
 many:
 | EOF
   { [] }
-| e = expr l = many
+| e=expr l=many
   { e :: l }
 
 expr:
-| n = NUMBER
+| n=NUMBER
   { Num n }
-| c = CHARACTER
+| c=CHARACTER
   { Chr c }
-| s = STRING
+| s=STRING
   { Str s }
-| s = SYMBOL
+| s=SYMBOL
   { Sym s }
 | DOTS
   { Dots }
 | LPAREN l=lst RPAREN
   { Lst l }
 lst:
-|   { [] }
-| e = expr l = lst
-    { e ::l }
+| { [] }
+| e=expr l=lst
+  { e :: l }
