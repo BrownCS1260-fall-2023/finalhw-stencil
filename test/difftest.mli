@@ -12,9 +12,13 @@ type diff_result =
   ; compiler_output: program_output }
 
 val run_exit_status_and_output :
-  ?stdin:string -> string -> args:string list -> program_output
+     ?stdin:string
+  -> ?timeout:string
+  -> string
+  -> args:string list
+  -> program_output
 (** [run_exit_status_and_output path ~args] is the exit status and output of
-    running the program at [path] with arguments [args]. *)
+ running the program at [path] with arguments [args]. *)
 
 val interp :
   ?stdin:string -> interpreter_path:string -> string -> program_output

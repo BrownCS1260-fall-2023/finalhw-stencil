@@ -23,7 +23,8 @@ type diff_result =
   ; interp_output: program_output
   ; compiler_output: program_output }
 
-let run_exit_status_and_output ?stdin cmd ~args : program_output =
+let run_exit_status_and_output ?stdin ?(timeout = "10s") cmd ~args :
+    program_output =
   wipe_tmp () ;
   let open Shexp_process in
   (* Pipes (exit_code, output) to the eval *)
@@ -33,13 +34,17 @@ let run_exit_status_and_output ?stdin cmd ~args : program_output =
          (err_to_out
             ( match stdin with
             | Some input ->
-                pipe (run "echo" [input]) (run_exit_code cmd args)
+                pipe (run "echo" [input])
+                  (run_exit_code "timeout" ([timeout; cmd] @ args))
             | None ->
-                run_exit_code cmd args ) )
+                run_exit_code "timeout" ([timeout; cmd] @ args) ) )
          read_all )
   with
   | 0, output ->
-      Ok (String.strip output)
+      if String.is_substring output ~substring:"Error" then Error ()
+      else Ok (String.strip output)
+  | 124, _ ->
+      Ok "Test timed out"
   | _, _ ->
       Error ()
 
