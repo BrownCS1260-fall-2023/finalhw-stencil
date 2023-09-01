@@ -2,7 +2,13 @@ open Core
 open Difftest
 
 let () =
-  let difftest_results = run_difftests () in
+  let example_dir = "./examples" in
+  ( match Sys_unix.file_exists example_dir with
+  | `Yes ->
+      ()
+  | _ ->
+      Core_unix.mkdir ~perm:0o777 example_dir ) ;
+  let difftest_results = run_difftests ~example_dir () in
   let inconsistent_tests =
     List.filter ~f:(Fn.non is_consistent) difftest_results
   in
