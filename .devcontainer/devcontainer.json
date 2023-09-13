@@ -25,5 +25,6 @@
         "yzhang.markdown-all-in-one"
       ]
     }
-  }
+  },
+  "postStartCommand": "opam init --dot-profile=~/.zshrc --shell-setup"
 }

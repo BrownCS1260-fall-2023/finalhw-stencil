@@ -18,7 +18,7 @@ WORKDIR /home/$username
 SHELL ["/bin/zsh", "-c"]
 
 # C/C++ Tools and OCaml
-RUN sudo apt-get install -y build-essential nasm opam m4 python3
+RUN sudo apt-get install -y build-essential nasm opam m4 python3 clang clang-format
 
 # Sets up OCaml
 RUN opam init -a --disable-sandboxing && \
@@ -30,6 +30,5 @@ RUN opam init -a --disable-sandboxing && \
     # which is required for OCaml 5.0.0 compatability. Specifically shexp requires posixat 0.16.0+.
     # For some reason official repo versions cause bugs and issues.
     opam repo add janestreet-bleeding https://ocaml.janestreet.com/opam-repository && \
-    opam install -y core core_unix menhir ppx_blob ppx_deriving ppx_inline_test ppx_let shexp yojson utop ounit2 ocaml-lsp-server ocamlformat domainslib && \
-    opam pin add -y ocamlformat 0.26.0 && \
-    echo -n 'eval $(opam env)' >> ~/.zshrc
+    opam install -y core core_unix menhir ppx_blob ppx_deriving ppx_inline_test ppx_let shexp yojson utop ounit2 ocaml-lsp-server ocamlformat domainslib ppx_import odoc atdgen printbox printbox-text && \
+    opam pin add -y ocamlformat 0.26.0
