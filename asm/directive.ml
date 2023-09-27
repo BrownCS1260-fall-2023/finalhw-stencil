@@ -99,9 +99,9 @@ let string_of_directive ~macos = function
   | Sub (dest, src) ->
       Printf.sprintf "\tsub %s, %s" (string_of_operand dest)
         (string_of_operand src)
-  | Div src ->
+  | IDiv src ->
       Printf.sprintf "\tidiv QWORD %s" (string_of_operand src)
-  | Mul src ->
+  | IMul src ->
       Printf.sprintf "\timul QWORD %s" (string_of_operand src)
   | Cqo ->
       Printf.sprintf "\tcqo"

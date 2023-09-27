@@ -21,8 +21,8 @@ type directive =
   | MovByte of (operand * operand)
   | Add of (operand * operand)
   | Sub of (operand * operand)
-  | Div of operand
-  | Mul of operand
+  | IDiv of operand
+  | IMul of operand
   | Cqo
   | Shl of (operand * operand)
   | Shr of (operand * operand)
