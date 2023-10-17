@@ -59,6 +59,7 @@ let link ~object_file ~runtime_file ~binary_file =
     ~args:
       [ disable_pie
       ; object_file
+      ; "-g"
       ; runtime_file
       ; "-o"
       ; binary_file
