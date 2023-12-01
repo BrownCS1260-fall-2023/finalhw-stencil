@@ -1,4 +1,6 @@
 open Ast
+open Asm.Directive
+open Util
 
 let propagate_constants (p : program) = p
 
@@ -8,37 +10,69 @@ let inline (p : program) = p
 
 let eliminate_common_subexpressions (p : program) = p
 
-let all_passes =
-  [ ("propagate-constants", propagate_constants)
-  ; ("uniquify-variables", uniquify_variables)
-  ; ("inline", inline)
-  ; ("eliminate-common-subexpressions", eliminate_common_subexpressions) ]
+let peephole (instrs : directive list) = instrs
 
-exception InvalidPasses
+type opt_pass =
+  | AstPass of (program -> program)
+  | AsmPass of (directive list -> directive list)
+
+let all_passes =
+  [ ("propagate-constants", AstPass propagate_constants)
+  ; ("uniquify-variables", AstPass uniquify_variables)
+  ; ("inline", AstPass inline)
+  ; ("eliminate-common-subexpressions", AstPass eliminate_common_subexpressions)
+  ; ("peephole", AsmPass peephole) ]
+
+exception InvalidPasses of string
 
 let validate_passes (l : string list) =
-  let rec go = function
-    | [] ->
+  (* Must use uniquify-variables before inline or ECS *)
+  let rec valid_uniquify = function
+    | [] | "uniquify-variables" :: _ ->
         ()
-    | "uniquify-variables" :: _ ->
-        ()
-    | "inline" :: _ ->
-        raise InvalidPasses
-    | "eliminate-common-subexpressions" :: _ ->
-        raise InvalidPasses
+    | (("inline" | "eliminate-common-subexpressions") as p) :: _ ->
+        let m =
+          Printf.sprintf "'uniquify-variables' must be applied before '%s'" p
+        in
+        raise (InvalidPasses m)
     | _ :: l ->
-        go l
+        valid_uniquify l
+  (* If peephole is specified, it must be the last element *)
+  and valid_peephole = function
+    | [] | "peephole" :: [] ->
+        ()
+    | "peephole" :: _ ->
+        raise (InvalidPasses "'peephole' must be the last optimization applied")
+    | _ :: l ->
+        valid_peephole l
   in
-  go l
+  (* The names of all passes must be found in `all_passes` *)
+  List.find_opt (fun p -> not (List.mem_assoc p all_passes)) l
+  |> Option.iter (fun p ->
+         raise (InvalidPasses (Printf.sprintf "Invalid pass '%s'" p)) ) ;
+  valid_uniquify l ;
+  valid_peephole l ;
+  l
 
 let get_passes (pass_spec : string list option) =
-  match pass_spec with
-  | None ->
-      List.map snd all_passes
-  | Some l ->
-      validate_passes l ;
-      List.map (fun s -> List.assoc s all_passes) l
+  Option.value pass_spec ~default:(List.map fst all_passes)
+  |> validate_passes
+  |> List.map (fun s -> List.assoc s all_passes)
 
-let optimize (prog : program) (pass_spec : string list option) =
-  let passes = get_passes pass_spec in
-  List.fold_left (fun p f -> f p) prog passes
+let apply_ast_pass (prog : program) = function
+  | AstPass pass ->
+      pass prog
+  | _ ->
+      prog
+
+let apply_asm_pass (instr : directive list) = function
+  | AsmPass pass ->
+      pass instr
+  | _ ->
+      instr
+
+let optimize_ast (prog : program) (pass_spec : string list option) =
+  get_passes pass_spec |> List.fold_left apply_ast_pass prog
+
+let optimize_asm (instr : directive list) (pass_spec : string list option) =
+  get_passes pass_spec |> List.fold_left apply_asm_pass instr
